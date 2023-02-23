@@ -197,6 +197,32 @@ final class SwiftLightBlueTests: XCTestCase {
         }
     }
 
+    func testSetupLexicon() throws {
+        let input = "が"
+        let result = setupLexicon(sentence: input)
+        XCTAssertEqual(result.count, 5)
+    }
+
+    func testChartParser() throws {
+        let parser = ChartParser()
+        do {
+            let sentence = "パンが"
+            XCTAssertEqual(parser.purifyText(sentence: sentence), "パンが")
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+        }
+        do {
+            let sentence = "太郎が来られる"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            guard let top = result.first else {
+                XCTFail("Wrong case")
+                return
+            }
+            debugPrint(top)
+        }
+    }
+
     func testParseMyLexicon() throws {
         let parser = MyLexiconParser()
         do {

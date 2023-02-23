@@ -31,6 +31,19 @@ extension Node: Comparable {
     }
 }
 
+extension Node: CustomDebugStringConvertible {
+    var debugDescription: String {
+        let daughterDescription = daughters.isEmpty ? "" : "\n    daughters: [\n" + daughters.map{$0.debugDescription.components(separatedBy: "\n").map{"        "+$0}.joined(separator: "\n")}.joined(separator: "\n") + "\n    ]"
+        return """
+        Node(
+            pf:        \(pf)
+            rs:        \(rs)
+            cat:       \(cat)\(source.isEmpty ? "" : "\n    source:    " + source)\(daughterDescription)
+        )
+        """
+    }
+}
+
 indirect enum Cat {
     case S([Feature])
     case NP([Feature])
@@ -749,4 +762,12 @@ func unifyFeatures(_ fsub: Assignment<[FeatureValue]>, _ f1: some Collection<Fea
         return nil
     }
     return ([f3h] + f3t, fsub3)
+}
+
+func wrapNode(_ node: Node) -> Node {
+    Node (rs: .WRAP, pf: node.pf, cat: .Sbar([.F([.Decl])]), daughters: [node], logScore: node.logScore + log(0.9), source: "")
+}
+
+func conjoinNodes(_ lnode: Node, _ rnode: Node) -> Node {
+    Node(rs: .DC, pf: lnode.pf + rnode.pf, cat: .Sbar([.F([.Decl])]), daughters: [lnode, rnode], logScore: lnode.logScore + rnode.logScore, source: "")
 }

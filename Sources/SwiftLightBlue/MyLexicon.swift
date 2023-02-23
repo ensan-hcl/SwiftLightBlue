@@ -66,3 +66,5 @@ func verblex(_ words: [some StringProtocol], _ source: some StringProtocol, _ po
         lexicalitem($0, source, 100, verbCat(cf, posF, conjF))
     }
 }
+
+let emptyCategories: [Node] = []
