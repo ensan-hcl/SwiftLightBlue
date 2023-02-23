@@ -103,7 +103,7 @@ struct MyLexiconParser {
                         continue
                     }
                     let f2 = parseBracketAsFeatureValues(part: line[startIndex ..< endIndex])
-                    guard let (_, endIndex) = rangeOfString(line: line[index...]) else {
+                    guard let (_, endIndex) = rangeOfString(line: line[endIndex...]) else {
                         buffer += " "
                         continue
                     }
