@@ -1,3 +1,7 @@
+// Copyright   : (c) Daisuke Bekki, 2016
+// Derived from https://github.com/DaisukeBekki/lightblue/blob/master/src/Parser/Japanese/MyLexicon.hs
+// License: BSD 3-Clause "New" or "Revised" License
+
 let haskellProgram = #"""
   -- 格助詞
   -- argument:
