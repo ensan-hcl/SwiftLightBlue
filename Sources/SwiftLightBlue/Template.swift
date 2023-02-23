@@ -1,4 +1,4 @@
-// Status: Syntax: NOT DONE
+// Status: Syntax: DONE
 // Status: Semantics: NOT DONE
 
 import Foundation
@@ -40,6 +40,7 @@ func defS(_ p: [FeatureValue], _ c: [FeatureValue]) -> Cat {
 }
 
 let m5: [Feature] = [.F([.M]), .F([.M]), .F([.M]), .F([.M]), .F([.M])]
+let pmmmm: [Feature] = [.F([.P]), .F([.M]), .F([.M]), .F([.M]), .F([.M])]
 let mmmpm: [Feature] = [.F([.M]), .F([.M]), .F([.M]), .F([.P]), .F([.M])]
 let mmpmm: [Feature] = [.F([.M]), .F([.M]), .F([.P]), .F([.M]), .F([.M])]
 let mpmmm: [Feature] = [.F([.M]), .F([.P]), .F([.M]), .F([.M]), .F([.M])]
