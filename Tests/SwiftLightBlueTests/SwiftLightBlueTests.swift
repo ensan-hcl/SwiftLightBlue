@@ -220,6 +220,18 @@ final class SwiftLightBlueTests: XCTestCase {
                 return
             }
             debugPrint(top)
+            print(result.map(\.score))
+        }
+        do {
+            let sentence = "小さなパンと大きなパン"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            guard let top = result.first else {
+                XCTFail("Wrong case")
+                return
+            }
+            debugPrint(top)
+            print(result.map(\.score))
         }
     }
 

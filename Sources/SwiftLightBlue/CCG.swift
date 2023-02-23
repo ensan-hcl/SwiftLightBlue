@@ -38,6 +38,7 @@ extension Node: CustomDebugStringConvertible {
         Node(
             pf:        \(pf)
             rs:        \(rs)
+            score:     \(score)
             cat:       \(cat)\(source.isEmpty ? "" : "\n    source:    " + source)\(daughterDescription)
         )
         """
@@ -440,6 +441,26 @@ func backwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
                 source: ""
             )
         ]
+    }
+    return []
+}
+
+func coordinationRule(lnode: Node, cnode: Node, rnode: Node) -> [Node] {
+    guard cnode.cat == .CONJ else {
+        return []
+    }
+    if lnode.rs == .COORD {
+        return []
+    }
+    if (rnode.cat.endsWithT || rnode.cat.isNStem) && lnode.cat == rnode.cat {
+        return [Node(
+            rs: .COORD,
+            pf: lnode.pf + cnode.pf + rnode.pf,
+            cat: rnode.cat,
+            daughters: [lnode, cnode, rnode],
+            logScore: lnode.logScore + rnode.logScore,
+            source: ""
+        )]
     }
     return []
 }

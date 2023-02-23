@@ -158,14 +158,17 @@ struct ChartParser {
         if i+1 > j-1 {
             return prevlist
         }
-        return (i+1..<(j-1)).reduce(prevlist) { acck, k in
-            (lookupChart(i, k, chart)).reduce(acck) { accc, cnode in
+        return (i+1..<j-1).reduce(prevlist) { acck, k in
+            (lookupChart(k, k+1, chart)).reduce(acck) { accc, cnode in
                 guard case .CONJ = cnode.cat else {
                     return accc
                 }
-                return (lookupChart(k+1, j, chart)).reduce(accc) { accl, lnode in
-                    (lookupChart(k, k+1, chart)).reduce(accl) { accr, rnode in
-                        accr //+ coordinationRule(lnode: lnode, cnode: cnode, rnode: rnode)
+//                print("checkCoordinationRule", cnode)
+                return (lookupChart(i, k, chart)).reduce(accc) { accl, lnode in
+//                    print("checkCoordinationRule", lnode.pf, cnode.pf)
+                    return (lookupChart(k+1, j, chart)).reduce(accl) { accr, rnode in
+//                        print("checkCoordinationRule", lnode.pf, cnode.pf, rnode.pf)
+                        return accr + coordinationRule(lnode: lnode, cnode: cnode, rnode: rnode)
                     }
                 }
             }
@@ -216,10 +219,10 @@ struct ChartParser {
         if lhs == rhs {
             return .EQ
         }
-        if lhs.j > rhs.j {
+        if rhs.j > lhs.j {
             return .GT
         }
-        if lhs.j == rhs.j && lhs.i < rhs.i {
+        if lhs.j == rhs.j && rhs.i < lhs.i {
             return .GT
         }
         return .LT
@@ -228,7 +231,7 @@ struct ChartParser {
     func extractParseResult(_ beamWidth: Int, _ chart: Chart) -> ParseResult {
         let result = chart.filter {
             !$0.value.isEmpty
-        }.sorted(by: {isLessPriviledgedThan(lhs: $0.key, rhs: $1.key) == .GT})
+        }.sorted(by: {isLessPriviledgedThan(lhs: $0.key, rhs: $1.key) == .LT})
         func f(_ c: [Chart.Element]) -> ParseResult {
             guard let first = c.first else {
                 return .failed
@@ -245,9 +248,15 @@ struct ChartParser {
                 return results
             }
             let (p, nodes) = first
-            return g(Array(nodes.map(wrapNode).flatMap{ x in
-                results.map{ y in conjoinNodes(x, y)}
+//            return g(Array(nodes.map(wrapNode).flatMap{ x in
+//                results.map{ y in conjoinNodes(x, y)}
+//            }.prefix(beamWidth)), c.dropFirst().filter {$0.key.j <= p.i})
+            return g(Array(results.flatMap {y in
+                nodes.map(wrapNode).map {x in
+                    conjoinNodes(x, y)
+                }
             }.prefix(beamWidth)), c.dropFirst().filter {$0.key.j <= p.i})
+
         }
 
         return f(result)
@@ -258,7 +267,7 @@ struct ChartParser {
     }
 
     /// receives a category and returns an integer based on the number of arguments of the category, which is used for sorting nodes with respect to which node is considered to be a better result of the parsing.  Lesser is better, but non-propositional categories (such as NP, CONJ, LPAREN and RPAREN) are the worst (=10) even if they take no arguments.
-    /// - note: 元の実装で「numberOfArgs」と呼ばれているのをそのまま用いているが、どちらかというとカテゴリのスコアに近い概念だと考えると良いだろう
+    /// - note: 元の実装で「numberOfArgs」と呼ばれているのをそのまま用いているが、どちらかというとカテゴリのスコアに近い概念だと考えると良い。少ないほど評価が高い。また、コメントでは`CONJ`や`LPAREN`、`RPAREN`も10となるように読めるが、実装に従って100にした。
     func numberOfArgs(_ cat: Cat) -> Int {
         switch cat {
         case let .SL(x, _), let .BS(x, _): return numberOfArgs(x) + 1
