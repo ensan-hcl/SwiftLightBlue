@@ -165,10 +165,6 @@ final class SwiftLightBlueTests: XCTestCase {
         XCTAssertEqual(Cat.NP([.F([.Nc])]), Cat.NP([.F([.Nc])]))
 
         XCTAssertNotEqual(Cat.NP([.F([.Nc])]), Cat.NP([.F([.Ga])]))
-
-
-        // TODO: 検証: これはイコール扱いできないらしい
-        XCTAssertNotEqual(Cat.S([]), Cat.S([]))
     }
 
     func testExecuteMacro() throws {
@@ -254,28 +250,6 @@ final class SwiftLightBlueTests: XCTestCase {
             }
 //            debugPrint(top)
 //            print(result.map(\.score))
-        }
-    }
-
-    func testParseMyLexicon() throws {
-        let parser = MyLexiconParser()
-        do {
-            let line = """
-        mylex ["無","な"] "(173)" (S ([F[ANAS], F[Stem]]++mmpmm) `BS` NP [F[Ga]]) (predSR 1 "無い/ない"), --  +nとした。「太郎しか財布にお金が無い」
-        mylex ["無","な"] "(173)+" ((S ([F[ANAS], F[Stem]]++mmpmm) `BS` NP [F[Ga]]) `BS` NP [F[Ni]]) (predSR 2 "無い/ない"),
-        mylex ["無","の"] "(173)" (S ([F[ANAS], F[UStem]]++mmpmm) `BS` NP [F[Ga]]) (predSR 1 "無い/ない"), -- +nとした
-        """
-            let result = parser.parseMyLexicon(line)
-            print(result)
-        }
-        do {
-            let line = """
-              -- 格助詞
-              -- argument:
-              mylex ["が"] "(524)" ((T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Ga]])) `BS` NP [F[Nc]]) argumentCM,
-            """
-            let result = parser.parseMyLexicon(line)
-            print(result)
         }
     }
 }

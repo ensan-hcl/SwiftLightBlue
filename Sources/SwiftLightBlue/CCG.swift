@@ -112,7 +112,6 @@ extension Cat: Equatable {
             return true
         default:
             return false
-
         }
     }
 }
@@ -478,7 +477,7 @@ func maximumIndexC(_ cat: Cat) -> Int {
     }
 }
 
-// TODO: 再帰を使わずに書き直した方がわかりやすい
+// 再帰を使わずに書き直した
 func maximumIndexF(_ features: some Collection<Feature>) -> Int {
     features.map{
         switch $0 {
@@ -488,17 +487,6 @@ func maximumIndexF(_ features: some Collection<Feature>) -> Int {
             return 0
         }
     }.max() ?? 0
-    /*
-    guard let first = features.first else {
-        return 0
-    }
-    switch first {
-    case .SF(let i, _):
-        return max(i, maximumIndexF(features.dropFirst()))
-    case .F:
-        return maximumIndexF(features.dropLast())
-    }
-     */
 }
 
 func incrementIndexC(_ cat: Cat, _ i: Int) -> Cat {
@@ -724,7 +712,7 @@ func unifyFeature(_ fsub: Assignment<[FeatureValue]>, f1: Feature, f2: Feature) 
     case let (.SF(i, v1), .SF(j, v2)):
         if i == j {
             let (_i, _v1) = fetchValue(fsub, i, v1)
-            // TODO: 順序について検証
+            // note: 順序について検証→FeatureValueの段階では順序は特に問題にならないため、Setでintersectionして良い。
             let v3 = Array(Set(_v1).intersection(v2))
             if v3.isEmpty {
                 return nil
