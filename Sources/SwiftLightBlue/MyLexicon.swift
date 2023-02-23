@@ -1,3 +1,14 @@
+import Foundation
+
+func ec(_ word: some StringProtocol, _ source: String, _ score: Int, _ cat: Cat) -> Node {
+    Node (rs: .EC, pf: "", cat: cat, daughters: [], logScore: log(Double(score)/100), source: "\(word):\(source)")
+}
+
+let emptyCategories: [Node] = {
+    let parser = MyLexiconParser()
+    return parser.parseMyLexicon(emptyCategoriesProgram)
+}()
+
 extension Node {
     static var が: Node {
         Node(
@@ -66,5 +77,3 @@ func verblex(_ words: [some StringProtocol], _ source: some StringProtocol, _ po
         lexicalitem($0, source, 100, verbCat(cf, posF, conjF))
     }
 }
-
-let emptyCategories: [Node] = []

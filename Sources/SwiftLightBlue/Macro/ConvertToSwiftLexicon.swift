@@ -158,6 +158,41 @@ struct MyLexiconParser {
                         score,
                         cat
                     ))
+                } else if order == "ec" {
+                    guard let (startIndex, endIndex) = rangeOfString(line: line[index...]) else {
+                        print("parseMyLexicon: \(#line): failed to parse \(line[index...]) as string in \(line)")
+                        buffer += " "
+                        continue
+                    }
+                    let word = String(line[startIndex ..< endIndex])
+                    guard let (startIndex, endIndex) = rangeOfString(line: line[line.index(after: endIndex)...]) else {
+                        print("parseMyLexicon: \(#line): failed to parse \(line[line.index(after: endIndex)...]) as string in \(line)")
+                        buffer += " "
+                        continue
+                    }
+                    let source = String(line[startIndex ..< endIndex])
+                    guard let (endIndex, score) = parseIntegerFromStart(line: line[line.index(endIndex, offsetBy: 2)...]) else {
+                        buffer += " "
+                        continue
+                    }
+
+                    guard let (startIndex, endIndex, cat) = rangeOfCategory(line: line[endIndex...]) else {
+                        print("parseMyLexicon: \(#line): failed to parse \(line[endIndex...]) as cat in \(line)")
+                        buffer += " "
+                        continue
+                    }
+                    guard let _ = rangeOfLf(line: line[endIndex...]) else {
+                        print("parseMyLexicon: \(#line): failed to parse \(line[endIndex...]) as lf in \(line): cat: \(line[startIndex ..< endIndex])")
+                        buffer += " "
+                        continue
+                    }
+                    //                let lf = line[startIndex ..< endIndex]
+                    myLexicon.append(ec(
+                        word,
+                        source,
+                        score,
+                        cat
+                    ))
                 } else {
                     guard let (startIndex, endIndex) = rangeOfBlacketMatch(line: line[index...]) else {
                         print("parseMyLexicon: \(#line): failed to parse \(line[index...]) as matched blacket")

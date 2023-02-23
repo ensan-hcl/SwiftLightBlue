@@ -248,15 +248,11 @@ struct ChartParser {
                 return results
             }
             let (p, nodes) = first
-//            return g(Array(nodes.map(wrapNode).flatMap{ x in
-//                results.map{ y in conjoinNodes(x, y)}
-//            }.prefix(beamWidth)), c.dropFirst().filter {$0.key.j <= p.i})
             return g(Array(results.flatMap {y in
                 nodes.map(wrapNode).map {x in
                     conjoinNodes(x, y)
                 }
             }.prefix(beamWidth)), c.dropFirst().filter {$0.key.j <= p.i})
-
         }
 
         return f(result)

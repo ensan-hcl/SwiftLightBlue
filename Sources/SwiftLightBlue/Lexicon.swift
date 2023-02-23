@@ -9,7 +9,7 @@ func setupLexicon(sentence: String) -> [Node] {
     // TODO: 1. Setting up lexical items provided by JUMAN++
     // 2. Setting up private lexicon
     let myLexiconParser = MyLexiconParser()
-    let mylexiconFiltered = myLexiconParser.parseMyLexicon(haskellProgram).filter {sentence.contains($0.pf)}
+    let mylexiconFiltered = myLexiconParser.parseMyLexicon(myLeiconProgram).filter {sentence.contains($0.pf)}
     // TODO: 3. Setting up compound nouns (returned from an execution of JUMAN)
     // TODO: 4. Accumulating common nons and proper names entries
     // 5. 0+1+2+3+4

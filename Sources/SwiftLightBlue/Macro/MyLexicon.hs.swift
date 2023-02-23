@@ -2,7 +2,124 @@
 // Derived from https://github.com/DaisukeBekki/lightblue/blob/master/src/Parser/Japanese/MyLexicon.hs
 // License: BSD 3-Clause "New" or "Revised" License
 
-let haskellProgram = #"""
+let emptyCategoriesProgram = #"""
+  -- 一段動詞活用語尾
+  --lexicalitem "\\emp" "(132)" 100
+  --            ((defS [V1] [Neg,Cont,ModM,NegL,EuphT]) `BS` (defS [V1] [Stem]))
+  --            id,
+  -- カ行変格活用動詞語幹
+  --ec "come" "(154)" 100
+  --            ((defS [VK] [Stem] `BS` NP [F[Ga]]) `BS` NP [F[Ni]])
+  --            (verbSR 2 "来る"),
+  -- サ行変格活用動詞語幹 -- とりあえずガヲ、ガヲトのパターンのみ。→サ変名詞のみに修正
+  --ec "do" "(156)" 100
+  --            ((defS [VS] [Stem] `BS` NP [F[Ga]]) `BS` defS [VSN] [Stem])
+  --            ((Lam (Lam (Lam (Sigma event (App (App (App (Con "する") (App (Var 3) (Var 1))) (Var 2)) (Var 0)))))), [("する",Pi Type (Pi entity Type))]),
+  --lexicalitem "\\emp" "(156)" (100%100)
+  --            (((defS [VS] [Stem] `BS` NP [Ga]) `BS` NP [F[O]]) `BS` defS [To])
+  --            (Lam (Lam (App (Con "する") (Pair (Var 0) (Var 1))))),
+  -- イ形容詞終止形活用語彙
+  --ec "\\emp" "(175)" 100
+  --            (S [F[Ai], F[Term], F[M], F[M], SF 1 [P,M], F[M], F[M]] `BS` S [F[Ai], F[Stem], F[M], F[M], SF 1 [P,M], F[M], F[M]])
+  --            (id,[]),
+  -- 判定詞語幹
+  ec "be-pred." "(235a)" 100
+              ((defS [Nda,Nna,Nno,Ntar] [NStem] `BS` NP [F [Ga]]) `BS` N)
+              (id,[]),
+  ec "be-ident." "(235b)" 99
+              ((defS [Nda,Nna] [NStem] `BS` NP [F[Ga]]) `BS` NP [F[Nc]])
+              ((Lam (Lam (Lam (Sigma (Eq entity (Var 1) (Var 2)) (App (Var 1) (Var 0)))))),[]),
+  -- サ変語幹→状詞語幹
+  --ec "\\emp" "(262)" 99
+  --            (defS [Nda,Nno] [NStem] `BS` defS [VSN] [Stem])
+  --            (id,[]),
+  -- サ変語幹→名詞
+  ec "\\emp" "ss" 99
+              ((((T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Nc]])) `BS` NP [F[No]]) `BS` NP [F[No]]) `BS` ((defS [VSN] [Stem] `BS` NP [F [Ga]]) `BS` NP [F [O]]))
+              ((Lam (Lam (Lam (Lam (Lamvec (App (App (App (Var 4) (Var 3)) (Var 2)) (Lam (Appvec 1 (App (Var 2) (Var 0)))))))))),[]),
+  -- 形式述語スル
+  ec "do" "(380a)" 100
+              (defS [VS,VSN] [Stem] `BS` S [F verb,F[Cont],F[M],F[M],F[M],F[M],F[P]])
+              (id,[]),
+  ec "do" "(380b)" 100
+              (defS [VS,VSN] [Stem] `BS` S [F verb,F[Cont],F[P],F[P,M],F[P,M],F[M],F[P,M]])
+              (id,[]),
+  -- 補助動詞「くる」
+  --ec "come" "(416)" 100
+  --            (defS [VK] [Stem] `BS` defS verb [TeForm])
+  --            (eventModifier "来る"),
+  -- 推量のウ
+  --ec "\\emp" "(349)" 100
+  --            (S [SF 1 anyPos, F[Pre], SF 2 [P,M], SF 3 [P,M],SF 4 [P,M],F[M],F[M]] `BS` S [SF 1 anyPos, F[ModU], SF 2 [P,M],SF 3 [P,M],SF 4 [P,M],F[M],F[M]])
+  --            (modalSR "＃ウ"),
+   -- 可能態
+  ec "\\emp" "(652a)" 99
+              ((defS [V1] [Stem,Neg,Cont,ModM,NegL,EuphT] `BS` NP [F[Ga]]) `BS` (defS anyPos [VoE] `BS` NP [F[Ga]]))
+              ((Lam (Lam (Lam (App (App (Con "＃可能") (Lam (App (App (Var 3) (Var 0)) (Var 1)))) (Var 1)) ))),
+               [("＃可能",(Pi (Pi entity Type) (Pi entity Type)))]),
+  ec "\\emp" "(652b)" 99
+              (((defS [V1] [Stem,Neg,Cont,ModM,NegL,EuphT] `BS` NP [F[Ni,Ga]]) `BS` NP [F[Ga]]) `BS` ((defS anyPos [VoE] `BS` NP [F[Ga]]) `BS` NP [F[O]]))
+              ((Lam (Lam (Lam (Lam (App (App (Con "＃可能") (Lam (App (App (Var 4) (Var 3)) (Var 0)))) (Var 1)))))),
+               [("＃可能",(Pi (Pi entity Type) (Pi entity Type)))]),
+  -- 状詞の副詞用法: ✕\p.\q.\v.\c.qv(\e.pe ∧ ce)
+  --                \p.\q.\c.q(\e.(x:entity) × (＃様態(e,x) × (px(λx.T) × ce)))
+  ec "\\emp" "(730)" 100
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (defS [Nemp] [NStem] `BS` NP [F[Ga]]))
+              ((Lam (Lam (Lam (App (Var 1) (Lam (Sigma entity (Sigma (App (App (Con "＃様態") (Var 0)) (Var 1)) (Sigma (App (App (Var 5) (Var 1)) (Lam Top)) (App (Var 4) (Var 3)))))))))), [("＃様態",Pi entity (Pi event Type))]),
+  -- 形容詞の様態副詞用法:
+  ec "\\emp" "(730)+" 100
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (defS [Aauo,Ai,ANAS,ATII] [Cont] `BS` NP[F[Ga]]))
+              ((Lam (Lam (Lam (App (Var 1) (Lam (Sigma entity (Sigma (App (App (Con "＃様態") (Var 0)) (Var 1)) (Sigma (App (App (Var 5) (Var 1)) (Lam Top)) (App (Var 4) (Var 3)))))))))), [("＃様態",Pi entity (Pi event Type))]),
+  -- 空冠詞（存在量化）
+  ec "∃ " "(544)" 99
+              ((T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Nc]])) `SL` N)
+              ((Lam (Lam (Lamvec (Sigma (Sigma entity (App (App (Var 3) (Var 0)) (Lam Top))) (Appvec 1 (App (Var 2) (Proj Fst (Var 0)))))))),[]),
+  -- 空助詞 (as one of the last resorts)
+  ec "cm" "(515)" 50
+              (((T True 1 modifiableS) `SL` ((T True 1 modifiableS) `BS` (NP [F[Ga,O]]))) `BS` (NP [F[Nc]]))
+              argumentCM,
+  -- pro1
+  ec "pro" "(597)" 99
+              (T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Ga,O,Ni,To,No,Niyotte]]))
+              ((Lam (App (Var 0) (Asp 1 entity))),[]),
+  -- pro2
+  ec "pro" "(597)" 98
+              (T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Ga,O,Ni,To,No,Niyotte]]))
+              ((Lam (App (Var 0) (Asp 2 entity))),[]),
+  -- pro3
+  ec "pro" "(597)" 97
+              (T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Ga,No]]))
+              ((Lam (App (Var 0) (Asp 3 entity))),[]),
+  -- 関係節化演算子(relativizer)
+  ec "rel" "(670)" 99
+              ((N `SL` N) `BS` (S [F anyPos, F[Attr], F[P,M],F[P,M],F[P,M],F[M],F[M]] `BS` NP [F[Ga,O,Ni,To]]))
+              ((Lam (Lam (Lam (Lam (Sigma (App (App (Var 3) (Var 1)) (Lam Top)) (App (App (Var 3) (Var 2)) (Var 1))))))),[]),
+  ec "rel-ext" "(670)+" 96
+              ((N `SL` N) `BS` (S [F anyPos, F[Attr], F[P,M],F[P,M],F[P,M],F[M],F[M]]))
+              ((Lam (Lam (Lam (Lam (Sigma (App (App (Var 2) (Var 1)) (Var 0)) (Sigma (App (Var 4) (Lam Top)) (Sigma (Pi event (Pi entity Type)) (App (App (Var 0) (Var 1)) (Var 4))))))))),[]),
+  -- 連用節、ヨウニ節、テ節
+  ec "cont-mod" "new" 99
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (S [F ([V5k, V5s, V5t, V5n, V5m, V5r, V5w, V5g, V5z, V5b, V5IKU, V5YUK, V5ARU, V5NAS, V5TOW, V1, VS, VSN, VZ]++adjective++nomPred), F[Cont], F[M],F[P,M],F[P,M],F[M],F[M]])) (conjunctionSR "cont"),
+  ec "yooni-mod" "new" 99
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` Sbar [F[YooniCL]]) (conjunctionSR "yooni"),
+  ec "te-mod" "new" 99
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (S [F anyPos, F[TeForm], F[M],F[P,M],F[P,M],F[M],F[M]])) (conjunctionSR "te"),
+  --ec "te-mod" "new" 80 -- 倒置
+  --            ((T False 1 (S [F anyPos,F[Term,Pre,Imper],F[P,M],F[P,M],F[P,M],F[M],F[M]]) `BS` T False 1 (S [F anyPos,F[Term,Pre,Imper],F[P,M],F[P,M],F[P,M],F[M],F[M]])) `SL` (S [F anyPos, F[TeForm], F[M],F[P,M],F[P,M],F[M],F[M]])) (conjunctionSR "te"),
+  ec "ni-neg-mod" "new" 99
+              ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (S [F anyPos, F[NiForm], F[M],F[M],F[P],F[M],F[M]])) (conjunctionSR "ni-neg")
+  --ec "ni-neg-mod" "new" 80 -- 倒置
+  --            ((T False 1 (S [F anyPos,F[Term,Pre,Imper],F[P,M],F[P,M],F[P,M],F[M],F[M]]) `BS` T False 1 (S [F anyPos,F[Term,Pre,Imper],F[P,M],F[P,M],F[P,M],F[M],F[M]])) `SL` (S [F anyPos, F[NiForm], F[M],F[M],F[P],F[M],F[M]])) (conjunctionSR "ni-neg"),
+  -- ダロウ接続形を派生する空範疇
+  -- lexicalitem "\\emp" "(354)" (99%100)
+  --             (defS (verb++adjective) [ModD] `BS` defS (verb++adjective) [Term])
+  --             id,
+  -- lexicalitem "\\emp" "(354)" (99%100)
+  --             (defS [Nda] [ModD] `BS` defS [Nda] [NStem])
+  --             id,
+"""#
+
+let myLeiconProgram = #"""
   -- 格助詞
   -- argument:
   mylex ["が"] "(524)" ((T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Ga]])) `BS` NP [F[Nc]]) argumentCM,

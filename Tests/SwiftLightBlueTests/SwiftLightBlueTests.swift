@@ -165,7 +165,7 @@ final class SwiftLightBlueTests: XCTestCase {
 
     func testExecuteMacro() throws {
         let parser = MyLexiconParser()
-        let result = parser.parseMyLexicon(haskellProgram)
+        let result = parser.parseMyLexicon(myLeiconProgram)
         let dict = Dictionary(grouping: result, by: \.pf)
         XCTAssertEqual(dict["が"]?.count, 5)
         XCTAssertEqual(dict["の"]?.count, 8)
@@ -232,6 +232,7 @@ final class SwiftLightBlueTests: XCTestCase {
             }
             debugPrint(top)
             print(result.map(\.score))
+            print(result.map{parser.numberOfArgs($0.cat)})
         }
     }
 
