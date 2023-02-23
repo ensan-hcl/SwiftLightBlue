@@ -130,7 +130,8 @@ struct ChartParser {
         )
 
         var newChart = chart
-        newChart[Position(i, j)] = Array(list1.sorted().prefix(beamWidth))
+        // 降順でソートする
+        newChart[Position(i, j)] = Array(list1.sorted().reversed().prefix(beamWidth))
         return (newChart, newWord, i-1, j)
     }
 
@@ -145,12 +146,12 @@ struct ChartParser {
     }
 
     func checkBinaryRules(_ i: Int, _ j: Int, _ chart: Chart, _ prevlist: [Node]) -> [Node] {
-        return (i+1..<j).reduce(prevlist) { acck, k in
-            (lookupChart(i, k, chart)).reduce(acck) { accl, lnode in
-                (lookupChart(k, j, chart)).reduce(accl) { accr, rnode in
-                    accr + binaryRules(lnode: lnode, rnode: rnode)
+        return (i+1..<j).reduce(into: prevlist) { acck, k in
+            acck.append(contentsOf: lookupChart(i, k, chart).flatMap { lnode in
+                lookupChart(k, j, chart).flatMap { rnode in
+                    binaryRules(lnode: lnode, rnode: rnode)
                 }
-            }
+            })
         }
     }
 
@@ -163,11 +164,8 @@ struct ChartParser {
                 guard case .CONJ = cnode.cat else {
                     return accc
                 }
-//                print("checkCoordinationRule", cnode)
                 return (lookupChart(i, k, chart)).reduce(accc) { accl, lnode in
-//                    print("checkCoordinationRule", lnode.pf, cnode.pf)
                     return (lookupChart(k+1, j, chart)).reduce(accl) { accr, rnode in
-//                        print("checkCoordinationRule", lnode.pf, cnode.pf, rnode.pf)
                         return accr + coordinationRule(lnode: lnode, cnode: cnode, rnode: rnode)
                     }
                 }
@@ -177,24 +175,28 @@ struct ChartParser {
 
     func checkParenthesisRule(_ i: Int, _ j: Int, _ chart: Chart, _ prevlist: [Node]) -> [Node] {
         if (i+3 <= j) {
-            return lookupChart(i, i+1, chart).filter{ $0.cat == .LPAREN }.reduce(prevlist) { accl, lnode in
+            let result = lookupChart(i, i+1, chart).filter{ $0.cat == .LPAREN }.reduce(prevlist) { accl, lnode in
                 lookupChart(j-1, j, chart).filter {$0.cat == .RPAREN}.reduce(accl) { accr, rnode in
                     (lookupChart(i+1, j-1, chart)).reduce(accr) { accc, cnode in
                         accc // + parenthesisRule(lnode, cnode, rnode)
                     }
                 }
             }
+            // 現在の実装では、等しくなるべき
+            assert(result == prevlist)
+            return result
         } else {
             return prevlist
         }
     }
 
     func checkEmptyCategories(_ prevlist: [Node]) -> [Node] {
-        return emptyCategories.reduce(prevlist) { p, ec in
-            prevlist.reduce(p) { list, node in
-                list + (binaryRules(lnode: node, rnode: ec)) + (binaryRules(lnode: ec, rnode: node))
+        let result = emptyCategories.reduce(prevlist) { p, ec in
+            p.flatMap { node in
+                [node] + binaryRules(lnode: node, rnode: ec) + binaryRules(lnode: ec, rnode: node)
             }
         }
+        return result
     }
 
     func simpleParse(_ beamWidth: Int, sentence: String) -> [Node] {
@@ -212,7 +214,7 @@ struct ChartParser {
     }
 
     enum Ordering {
-        case GT, LT,  EQ
+        case GT, LT, EQ
     }
 
     func isLessPriviledgedThan (lhs: Position, rhs: Position) -> Ordering {
@@ -237,10 +239,11 @@ struct ChartParser {
                 return .failed
             }
             let (p, nodes) = first
+            let sorted = sortByNumberOfArgs(nodes)
             if p.i == 0 {
-                return .full(sortByNumberOfArgs(nodes).map(wrapNode))
+                return .full(sorted.map(wrapNode))
             } else  {
-                return .partial(g(sortByNumberOfArgs(nodes).map(wrapNode), c.filter{$0.key.j <= p.i}))
+                return .partial(g(sorted.map(wrapNode), c.filter{$0.key.j <= p.i}))
             }
         }
         func g(_ results: [Node], _ c: [Chart.Element]) -> [Node] {

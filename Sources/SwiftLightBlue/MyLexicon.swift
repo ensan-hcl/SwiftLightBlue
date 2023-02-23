@@ -9,6 +9,11 @@ let emptyCategories: [Node] = {
     return parser.parseMyLexicon(emptyCategoriesProgram)
 }()
 
+let myLexicon: [Node] = {
+    let parser = MyLexiconParser()
+    return parser.parseMyLexicon(myLeiconProgram)
+}()
+
 extension Node {
     static var が: Node {
         Node(

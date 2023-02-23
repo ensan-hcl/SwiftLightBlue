@@ -134,7 +134,21 @@ final class SwiftLightBlueTests: XCTestCase {
             .NP([.F([.Ga])])
         ))
         XCTAssertEqual(result[0].daughters, [lnode, rnode])
+    }
 
+    func testBinaryRules() throws {
+        let 小さ = myLexicon.filter {$0.pf == "小さ"}.first!
+        let な = myLexicon.filter {$0.pf == "な" && $0.source == "(220)"}.first!
+        let パン = additionalLexicon.filter {$0.pf == "パン"}.first!
+        do {
+            let result = binaryRules(lnode: 小さ, rnode: な)
+            XCTAssertFalse(result.isEmpty)
+        }
+        do {
+            let 小さな = binaryRules(lnode: 小さ, rnode: な).first {$0.score == 1 && $0.rs == .BFC1}!
+            let result = binaryRules(lnode: 小さな, rnode: パン)
+            XCTAssertFalse(result.isEmpty)
+        }
     }
 
     func testUnifyCategory() throws {
@@ -173,6 +187,7 @@ final class SwiftLightBlueTests: XCTestCase {
         XCTAssertEqual(dict["い"]?.count, 9)
     }
 
+
     func testParseCategory() throws {
         let parser = MyLexiconParser()
         do {
@@ -210,12 +225,25 @@ final class SwiftLightBlueTests: XCTestCase {
             XCTAssertEqual(parser.purifyText(sentence: sentence), "パンが")
             let result = parser.simpleParse(10, sentence: sentence)
             XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
+        }
+        do {
+            let sentence = "来られる"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
         }
         do {
             let sentence = "太郎が来られる"
             let result = parser.simpleParse(10, sentence: sentence)
             XCTAssertFalse(result.isEmpty)
-            guard let top = result.first else {
+            XCTAssertTrue(result.first?.rs == .WRAP)
+        }
+        do {
+            let sentence = "小さなパン"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            guard let top = result.prefix(1).last else {
                 XCTFail("Wrong case")
                 return
             }
@@ -226,13 +254,12 @@ final class SwiftLightBlueTests: XCTestCase {
             let sentence = "小さなパンと大きなパン"
             let result = parser.simpleParse(10, sentence: sentence)
             XCTAssertFalse(result.isEmpty)
-            guard let top = result.first else {
+            guard let top = result.prefix(3).last else {
                 XCTFail("Wrong case")
                 return
             }
-            debugPrint(top)
-            print(result.map(\.score))
-            print(result.map{parser.numberOfArgs($0.cat)})
+//            debugPrint(top)
+//            print(result.map(\.score))
         }
     }
 
