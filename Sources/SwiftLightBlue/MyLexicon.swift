@@ -1,3 +1,5 @@
+// Status: Syntax: DONE
+// Status: Semantics: NOT DONE
 import Foundation
 
 func ec(_ word: some StringProtocol, _ source: String, _ score: Int, _ cat: Cat) -> Node {

@@ -1,3 +1,6 @@
+// Status: Syntax: DONE
+// Status: Semantics: NOT DONE
+
 import Foundation
 
 struct ChartParser {

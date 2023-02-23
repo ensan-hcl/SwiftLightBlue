@@ -1,3 +1,5 @@
+// Status: Syntax: DONE
+// Status: Semantics: NOT DONE
 import Foundation
 
 struct Node: Equatable {

@@ -1,3 +1,6 @@
+// Status: Syntax: NOT DONE
+// Status: Semantics: NOT DONE
+
 import Foundation
 
 /// defines a lexical item.
