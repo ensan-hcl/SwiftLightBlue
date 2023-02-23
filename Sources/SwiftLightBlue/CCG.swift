@@ -360,7 +360,7 @@ func backwardFunctionApplicationRule(lnode: Node, rnode: Node) -> [Node] {
     if rnode.rs == .BFC1 || rnode.rs == .BFC2 || rnode.rs == .BFC3 {
         return []
     }
-    let inc = maximumIndexC(rnode.cat)
+    let inc = maximumIndexC(lnode.cat)
     if let (_, csub, fsub) = unifyCategory([], [], [], lnode.cat, incrementIndexC(y2, inc)) {
         let newcat = simulSubstituteCV(csub, fsub, incrementIndexC(x, inc))
         return [
@@ -428,7 +428,7 @@ func backwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
     }
     let inc = maximumIndexC(lnode.cat)
     if let (_, csub, fsub) = unifyCategory([], [], [], y1, incrementIndexC(y2, inc)) {
-        let newcat: Cat = .BS(simulSubstituteCV(csub, fsub, incrementIndexC(x, inc)), z)
+        let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(incrementIndexC(x, inc), z))
         return [
             Node(
                 rs: .BFC1,
