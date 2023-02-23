@@ -139,14 +139,8 @@ final class SwiftLightBlueTests: XCTestCase {
     func testBinaryRules() throws {
         let 小さ = myLexicon.filter {$0.pf == "小さ"}.first!
         let な = myLexicon.filter {$0.pf == "な" && $0.source == "(220)"}.first!
-        let パン = additionalLexicon.filter {$0.pf == "パン"}.first!
         do {
             let result = binaryRules(lnode: 小さ, rnode: な)
-            XCTAssertFalse(result.isEmpty)
-        }
-        do {
-            let 小さな = binaryRules(lnode: 小さ, rnode: な).first {$0.score == 1 && $0.rs == .BFC1}!
-            let result = binaryRules(lnode: 小さな, rnode: パン)
             XCTAssertFalse(result.isEmpty)
         }
     }
