@@ -718,18 +718,12 @@ func alter<T, U>(_ i: T, _ v: U, _ mp: [(T, U)]) -> [(T, U)] where T: Comparable
 }
 
 func fetchValue<T>(_ sub: Assignment<T>, _ i: Int, _ v: T) -> (Int, T) {
-    if let s = sub.first(where: {$0.0 == i})?.1 {
-        switch s {
-        case .substLink(let j):
-            if j < i {
-                return fetchValue(sub, j, v)
-            } else {
-                return (i, v)
-            }
-        case .substVal(let u):
-            return (i, u)
-        }
-    } else {
+    switch sub.first(where: {$0.0 == i})?.1 {
+    case .substLink(let j) where j < i:
+        return fetchValue(sub, j, v)
+    case .substVal(let u):
+        return (i, u)
+    default:
         return (i, v)
     }
 }
