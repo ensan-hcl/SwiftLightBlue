@@ -230,26 +230,30 @@ final class SwiftLightBlueTests: XCTestCase {
             XCTAssertTrue(result.first?.rs == .WRAP)
         }
         do {
+            let sentence = "象がパンを食べる"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
+            debugPrint(result.first!)
+            print(result.map(\.score))
+        }
+        do {
             let sentence = "小さなパン"
             let result = parser.simpleParse(10, sentence: sentence)
             XCTAssertFalse(result.isEmpty)
-            guard let top = result.prefix(1).last else {
-                XCTFail("Wrong case")
-                return
-            }
-            debugPrint(top)
-            print(result.map(\.score))
+            XCTAssertTrue(result.first?.rs == .WRAP)
         }
         do {
             let sentence = "小さなパンと大きなパン"
             let result = parser.simpleParse(10, sentence: sentence)
             XCTAssertFalse(result.isEmpty)
-            guard let top = result.prefix(3).last else {
-                XCTFail("Wrong case")
-                return
-            }
-//            debugPrint(top)
-//            print(result.map(\.score))
+            XCTAssertTrue(result.first?.rs == .WRAP)
         }
+    }
+    
+    func testGetBundle() throws {
+        let b = getBundle()
+        print(b.bundleURL)
+        print(b.url(forResource: "Juman.dic", withExtension: "tsv"))
     }
 }
