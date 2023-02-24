@@ -314,9 +314,9 @@ func binaryRules(lnode: Node, rnode: Node) -> [Node] {
         // forwardFunctionCrossedSubstitutionRule(lnode: lnode, rnode: rnode),
         // forwardFunctionCrossedComposition2Rule(lnode: lnode, rnode: rnode),
         // forwardFunctionCrossedComposition1Rule(lnode: lnode, rnode: rnode),
-        // backwardFunctionComposition3Rule(lnode: lnode, rnode: rnode),
+        backwardFunctionComposition3Rule(lnode: lnode, rnode: rnode),
         backwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
-//        forwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
+        forwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
         backwardFunctionComposition1Rule(lnode: lnode, rnode: rnode),
         forwardFunctionComposition1Rule(lnode: lnode, rnode: rnode),
         backwardFunctionApplicationRule(lnode: lnode, rnode: rnode),
@@ -413,6 +413,37 @@ func forwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
     return []
 }
 
+func forwardFunctionComposition2Rule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .SL(x, y1) = lnode.cat,
+          case let .SL(y, z2) = rnode.cat,
+          case let .SL(y2, z1) = y else {
+        return []
+    }
+    if lnode.rs == .FFC1 || lnode.rs == .FFC2 || lnode.rs == .FFC3 || y1.isTNoncaseNP {
+        return []
+    }
+    let inc = maximumIndexC(rnode.cat)
+    if let (_, csub, fsub) = unifyCategory([], [], [], incrementIndexC(y1, inc), y2) {
+        let _z1 = simulSubstituteCV(csub, fsub, z1)
+        if _z1.numberOfArguments > 2 {
+            return []
+        } else {
+            let newcat: Cat = simulSubstituteCV(csub, fsub, .SL(.SL(incrementIndexC(x, inc), z1), z2))
+            return [
+                Node(
+                    rs: .FFC2,
+                    pf: lnode.pf + rnode.pf,
+                    cat: newcat,
+                    daughters: [lnode, rnode],
+                    logScore: lnode.logScore + rnode.logScore,
+                    source: ""
+                )
+            ]
+        }
+    }
+    return []
+}
+
 func backwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
     guard case let .BS(y1, z) = lnode.cat,
           case let .BS(x, y2) = rnode.cat else {
@@ -455,6 +486,35 @@ func backwardFunctionComposition2Rule(lnode: Node, rnode: Node) -> [Node] {
         return [
             Node(
                 rs: .BFC2,
+                pf: lnode.pf + rnode.pf,
+                cat: newcat,
+                // sem: ,
+                // sig: ,
+                daughters: [lnode, rnode],
+                logScore: lnode.logScore + rnode.logScore,
+                source: ""
+            )
+        ]
+    }
+    return []
+}
+
+func backwardFunctionComposition3Rule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .BS(y, z3) = lnode.cat,
+          case let .BS(y_, z2) = y,
+          case let .BS(y1, z1) = y_,
+          case let .BS(x, y2) = rnode.cat else {
+        return []
+    }
+    if rnode.rs == .BFC1 || rnode.rs == .BFC2 || rnode.rs == .BFC3 {
+        return []
+    }
+    let inc = maximumIndexC(lnode.cat)
+    if let (_, csub, fsub) = unifyCategory([], [], [], incrementIndexC(y2, inc), y1) {
+        let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(.BS(.BS(incrementIndexC(x, inc), z1), z2), z3))
+        return [
+            Node(
+                rs: .BFC3,
                 pf: lnode.pf + rnode.pf,
                 cat: newcat,
                 // sem: ,

@@ -242,8 +242,7 @@ final class SwiftLightBlueTests: XCTestCase {
         do {
             let sentence = "象がパンを食べる"
             let result = parser.simpleParse(10, sentence: sentence)
-            // FIXME: currently broken
-            XCTAssertTrue(result.isEmpty)
+            XCTAssertFalse(result.isEmpty)
         }
         do {
             let sentence = "小さなパン"
