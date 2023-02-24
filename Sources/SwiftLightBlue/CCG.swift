@@ -945,20 +945,21 @@ func unifyFeature(_ fsub: Assignment<[FeatureValue]>, f1: Feature, f2: Feature) 
     }
 }
 
+// 再帰を使わずに書き直した
 func unifyFeatures(_ fsub: Assignment<[FeatureValue]>, _ f1: some Collection<Feature>, _ f2: some Collection<Feature>) -> ([Feature], Assignment<[FeatureValue]>)? {
-    guard let f1h = f1.first,
-          let f2h = f2.first else {
-        if f1.isEmpty && f2.isEmpty {
-            return ([], fsub)
-        } else {
-            return nil
-        }
-    }
-    guard let (f3h, fsub2) = unifyFeature(fsub, f1: f1h, f2: f2h),
-          let (f3t, fsub3) = unifyFeatures(fsub2, f1.dropFirst(), f2.dropFirst()) else {
+    guard f1.count == f2.count else {
         return nil
     }
-    return ([f3h] + f3t, fsub3)
+    var features: [Feature] = []
+    var fsub = fsub
+    for (f1h, f2h) in zip(f1, f2) {
+        guard let (f3, fsub2) = unifyFeature(fsub, f1: f1h, f2: f2h) else {
+            return nil
+        }
+        features.append(f3)
+        fsub = fsub2
+    }
+    return (features, fsub)
 }
 
 func wrapNode(_ node: Node) -> Node {
