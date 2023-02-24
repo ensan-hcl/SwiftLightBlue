@@ -234,9 +234,7 @@ struct ChartParser {
     }
 
     func extractParseResult(_ beamWidth: Int, _ chart: Chart) -> ParseResult {
-        let result = chart.filter {
-            !$0.value.isEmpty
-        }.sorted(by: {isLessPriviledgedThan(lhs: $0.key, rhs: $1.key) == .LT})
+        let result = chart.sorted(by: {isLessPriviledgedThan(lhs: $0.key, rhs: $1.key) == .LT})
         func f(_ c: [Chart.Element]) -> ParseResult {
             guard let first = c.first else {
                 return .failed
@@ -265,7 +263,14 @@ struct ChartParser {
     }
 
     func sortByNumberOfArgs(_ nodes: [Node]) -> [Node] {
-        return nodes.sorted(by: {numberOfArgs($0.cat) < numberOfArgs($1.cat)})
+        return nodes.sorted(by: { (l, r) in
+            let nl = numberOfArgs(l.cat)
+            let nr = numberOfArgs(r.cat)
+            if nl == nr {
+                return l.score > r.score
+            }
+            return nl < nr
+        })
     }
 
     /// receives a category and returns an integer based on the number of arguments of the category, which is used for sorting nodes with respect to which node is considered to be a better result of the parsing.  Lesser is better, but non-propositional categories (such as NP, CONJ, LPAREN and RPAREN) are the worst (=10) even if they take no arguments.
