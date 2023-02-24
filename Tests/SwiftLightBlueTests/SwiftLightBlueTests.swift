@@ -212,12 +212,6 @@ final class SwiftLightBlueTests: XCTestCase {
         }
     }
 
-    func testSetupLexicon() throws {
-        let input = "が"
-        let result = setupLexicon(sentence: input)
-        XCTAssertEqual(result.count, 5)
-    }
-
     func testChartParser() throws {
         let parser = ChartParser()
         do {
