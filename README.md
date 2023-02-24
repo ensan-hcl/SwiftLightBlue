@@ -10,6 +10,6 @@ Daisuke Bekki氏の日本語CCGパーザである[lightblue](https://github.com/
 
 ## LICENSE
 
-`Sources/SwiftLightBlue/Macro/MyLexicon.hs.swift`の著作権はDaisuke Bekki氏に帰属し、BSD 3-Clause "New" or "Revised" Licenseの元で利用されています。
+`Sources/SwiftLightBlue/Japanese/Macro/MyLexicon.hs.swift`の著作権はDaisuke Bekki氏に帰属し、BSD 3-Clause "New" or "Revised" Licenseの元で利用されています。また、`Sources/SwiftLightBlue/Japanese/Juman.dic.tsv`は元レポジトリより同ライセンスのもとで取得したものです。
 
 上記以外のソースコードの著作権はensan (Keita Miwa)に帰属し、BSD 3-Clause "New" or "Revised" Licenseでライセンスされています。ただしそのほとんどは、Daisuke Bekki氏の実装に基づくものです。
