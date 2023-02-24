@@ -77,6 +77,12 @@ final class SwiftLightBlueTests: XCTestCase {
             XCTAssertEqual(result[0].daughters, [lnode, rnode])
 
         }
+        do {
+            let lnode = Node(rs: .LEX, pf: "", cat: .S([.SF(9, [.VSN, .VS]), .SF(10, [.Term, .Attr]), .SF(11, [.M]), .SF(12, [.M]), .SF(13, [.M]), .F([.M]), .F([.M])]), daughters: [], logScore: 0, source: "")
+            let rnode = Node(rs: .LEX, pf: "", cat: .BS(.SL(.N, .N), (.S([.F(anyPos), .F([.Attr]), .F([.P, .M]), .F([.P, .M]), .F([.P, .M]), .F([.M]), .F([.M])]))), daughters: [], logScore: 0, source: "")
+            let result = SwiftLightBlue.backwardFunctionApplicationRule(lnode: lnode, rnode: rnode)
+            XCTAssertFalse(result.isEmpty)
+        }
     }
 
     func testFFC() throws {
@@ -177,14 +183,22 @@ final class SwiftLightBlueTests: XCTestCase {
     }
 
     func testExecuteMacro() throws {
-        let parser = MyLexiconParser()
-        let result = parser.parseMyLexicon(myLeiconProgram)
-        let dict = Dictionary(grouping: result, by: \.pf)
-        XCTAssertEqual(dict["が"]?.count, 5)
-        XCTAssertEqual(dict["の"]?.count, 8)
-        XCTAssertEqual(dict["な"]?.count, 12)
-        XCTAssertEqual(dict["い"]?.count, 9)
-        XCTAssertEqual(dict["る"]?.count, 1)
+        do {
+            let parser = MyLexiconParser()
+            let result = parser.parseMyLexicon(myLeiconProgram)
+            let dict = Dictionary(grouping: result, by: \.pf)
+            XCTAssertEqual(dict["が"]?.count, 5)
+            XCTAssertEqual(dict["の"]?.count, 8)
+            XCTAssertEqual(dict["な"]?.count, 12)
+            XCTAssertEqual(dict["い"]?.count, 9)
+            XCTAssertEqual(dict["る"]?.count, 1)
+        }
+        do {
+            let parser = MyLexiconParser()
+            let result = parser.parseMyLexicon(emptyCategoriesProgram)
+            let rel_ext = result.first{$0.source.contains("rel-ext")}
+            print(rel_ext?.cat)
+        }
     }
 
 
@@ -251,7 +265,23 @@ final class SwiftLightBlueTests: XCTestCase {
             XCTAssertTrue(result.first?.rs == .WRAP)
         }
     }
-    
+
+    func testChartParser2() throws {
+        let parser = ChartParser()
+        do {
+            let sentence = "文を処理するモデルです"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
+        }
+        do {
+            let sentence = "全員がそこに集まった"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
+        }
+    }
+
     func testGetBundle() throws {
         let b = getBundle()
         print(b.bundleURL)

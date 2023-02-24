@@ -463,9 +463,19 @@ struct MyLexiconParser {
 
     func parseFeatureValues(line: some StringProtocol) -> (startIndex: String.Index, endIndex: String.Index, value: [FeatureValue])? {
         var p = line[...].drop(while: \.isWhitespace)
+
         let startIndex = p.startIndex
-        let exp = ["verb", "anyPos", "nonStem", "adjective"]
+        let exp = ["verb", "anyPos", "nonStem", "adjective", "nomPred"]
         var result: [FeatureValue] = []
+
+        // 全体がカッコで包まれている場合がある
+        if p.starts(with: "("),
+           let (s, e) = rangeOfParenMatch(line: p),
+           let (_, _, f) = parseFeatureValues(line: p[s..<e].dropFirst().dropLast()) {
+            p = p[e...]
+            result.append(contentsOf: f)
+        }
+
         for string in exp {
             if p.starts(with: string) {
                 result.append(contentsOf: fvsGeneratorForString(string))
@@ -473,10 +483,16 @@ struct MyLexiconParser {
                 break
             }
         }
-        if let (s, e) = rangeOfBlacketMatch(line: p) {
+
+        if result.isEmpty, let (s, e) = rangeOfBlacketMatch(line: p) {
             result.append(contentsOf: parseBracketAsFeatureValues(part: p[s..<e]))
             p = p[e...]
         }
+
+        guard !result.isEmpty else {
+            return nil
+        }
+        
         if p.starts(with: "++") {
             p = p.dropFirst(2)
             guard let (_, e, rest) = parseFeatureValues(line: p) else {
@@ -507,7 +523,7 @@ struct MyLexiconParser {
                 p = p.drop(while: \.isWhitespace)
             }
             if p.starts(with: "F") {
-                p = p.dropFirst(1)
+                p = p.dropFirst().drop(while: \.isWhitespace)
                 if let (_, e, v) = parseFeatureValues(line: p) {
                     features.append(.F(v))
                     p = p[e...]
@@ -516,7 +532,7 @@ struct MyLexiconParser {
                 fatalError("Error in parsing \(p) as FeatureValue in \(part)")
             }
             if p.starts(with: "SF") {
-                p = p.dropFirst(2+1)
+                p = p.dropFirst(2).drop(while: \.isWhitespace)
                 guard let (e, i) = parseIntegerFromStart(line: p) else {
                     fatalError("Error in parsing head of \(p) as Int in \(part)")
                 }
@@ -537,8 +553,8 @@ struct MyLexiconParser {
         guard let (s, e) = rangeOfBlacketMatch(line: p) else {
             fatalError("Error: \(part)")
         }
-        p = p[e...]
         var f = parseBracketAsFeatures(part: part[s..<e])
+        p = p[e...]
 
     `while`: while p.starts(with: "++") {
         p = p.dropFirst(2)
@@ -635,6 +651,9 @@ struct MyLexiconParser {
     func fvsGeneratorForString(_ p: some StringProtocol) -> [FeatureValue] {
         if p == "verb" {
             return verb
+        }
+        if p == "nomPred" {
+            return nomPred
         }
         if p == "anyPos" {
             return anyPos
