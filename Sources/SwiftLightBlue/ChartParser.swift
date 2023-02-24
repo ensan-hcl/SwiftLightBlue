@@ -181,12 +181,10 @@ struct ChartParser {
             let result = lookupChart(i, i+1, chart).filter{ $0.cat == .LPAREN }.reduce(prevlist) { accl, lnode in
                 lookupChart(j-1, j, chart).filter {$0.cat == .RPAREN}.reduce(accl) { accr, rnode in
                     (lookupChart(i+1, j-1, chart)).reduce(accr) { accc, cnode in
-                        accc // + parenthesisRule(lnode, cnode, rnode)
+                        accc + parenthesisRule(lnode: lnode, cnode: cnode, rnode: rnode)
                     }
                 }
             }
-            // 現在の実装では、等しくなるべき
-            assert(result == prevlist)
             return result
         } else {
             return prevlist

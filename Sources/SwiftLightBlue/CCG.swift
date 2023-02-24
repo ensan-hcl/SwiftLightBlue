@@ -311,9 +311,9 @@ func unaryRules(node: Node) -> [Node] {
 
 func binaryRules(lnode: Node, rnode: Node) -> [Node] {
     return [
-        // forwardFunctionCrossedSubstitutionRule(lnode: lnode, rnode: rnode),
-        // forwardFunctionCrossedComposition2Rule(lnode: lnode, rnode: rnode),
-        // forwardFunctionCrossedComposition1Rule(lnode: lnode, rnode: rnode),
+        forwardFunctionCrossedSubstitutionRule(lnode: lnode, rnode: rnode),
+        forwardFunctionCrossedComposition2Rule(lnode: lnode, rnode: rnode),
+        forwardFunctionCrossedComposition1Rule(lnode: lnode, rnode: rnode),
         backwardFunctionComposition3Rule(lnode: lnode, rnode: rnode),
         backwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
         forwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
@@ -528,6 +528,94 @@ func backwardFunctionComposition3Rule(lnode: Node, rnode: Node) -> [Node] {
     return []
 }
 
+func forwardFunctionCrossedComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .SL(x, y1) = lnode.cat,
+          case let .BS(y2, z) = rnode.cat else {
+        return []
+    }
+    if lnode.rs == .FFC1 || lnode.rs == .FFC2 || lnode.rs == .FFC3 || y1.isTNoncaseNP || !z.isArgumentCategory {
+        return []
+    }
+    let inc = maximumIndexC(rnode.cat)
+    if let (_, csub, fsub) = unifyCategory([], [], [], y2, incrementIndexC(y1, inc)) {
+        let z_ = simulSubstituteCV(csub, fsub, z)
+        let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(incrementIndexC(x, inc), z_))
+        return [
+            Node(
+                rs: .FFCx1,
+                pf: lnode.pf + rnode.pf,
+                cat: newcat,
+                daughters: [lnode, rnode],
+                // TODO: 検証: 元の実装では`(100 % 100)`をかけていた。'degrade'させるとの記述があるため、とりあえず`-2`で対処した。
+                logScore: lnode.logScore + rnode.logScore - 2,
+                source: ""
+            )
+        ]
+    }
+    return []
+}
+
+func forwardFunctionCrossedComposition2Rule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .SL(x, y1) = lnode.cat,
+          case let .BS(y, z2) = rnode.cat,
+          case let .BS(y2, z1) = y else {
+        return []
+    }
+    if lnode.rs == .FFC1 || lnode.rs == .FFC2 || lnode.rs == .FFC3 || y1.isTNoncaseNP || !z2.isArgumentCategory || !z1.isArgumentCategory {
+        return []
+    }
+    let inc = maximumIndexC(rnode.cat)
+    if let (_, csub, fsub) = unifyCategory([], [], [], incrementIndexC(y1, inc), y2) {
+        let z1_ = simulSubstituteCV(csub, fsub, z1)
+        if z1_.numberOfArguments > 2 {
+            return []
+        }
+        let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(.BS(incrementIndexC(x, inc), z1_), z2))
+        return [
+            Node(
+                rs: .FFCx2,
+                pf: lnode.pf + rnode.pf,
+                cat: newcat,
+                daughters: [lnode, rnode],
+                // TODO: 検証: 元の実装では`(100 % 100)`をかけていた。'degrade more'させるとの記述があるため、とりあえず`-3`で対処した。
+                logScore: lnode.logScore + rnode.logScore - 3,
+                source: ""
+            )
+        ]
+    }
+    return []
+}
+
+
+func forwardFunctionCrossedSubstitutionRule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .BS(y, z1) = lnode.cat,
+          case let .SL(x, y1) = y,
+          case let .BS(y2, z2) = rnode.cat else {
+        return []
+    }
+    if !z1.isArgumentCategory || !z2.isArgumentCategory {
+        return []
+    }
+    let inc = maximumIndexC(rnode.cat)
+    if let (z, csub1, fsub1) = unifyCategory([], [], [], incrementIndexC(z1, inc), z2) {
+        if let (_, csub2, fsub2) = unifyCategory(csub1, fsub1, [], incrementIndexC(y1, inc), y2) {
+            let newcat: Cat = simulSubstituteCV(csub2, fsub2, .BS(incrementIndexC(x, inc), z))
+            return [
+                Node(
+                    rs: .FFSx,
+                    pf: lnode.pf + rnode.pf,
+                    cat: newcat,
+                    daughters: [lnode, rnode],
+                    // TODO: 検証: 元の実装では`(100 % 100)`をかけていた。'degrade'させるとの記述があるため、とりあえず`-2`で対処した。
+                    logScore: lnode.logScore + rnode.logScore - 2,
+                    source: ""
+                )
+            ]
+        }
+    }
+    return []
+}
+
 func coordinationRule(lnode: Node, cnode: Node, rnode: Node) -> [Node] {
     guard cnode.cat == .CONJ else {
         return []
@@ -546,6 +634,22 @@ func coordinationRule(lnode: Node, cnode: Node, rnode: Node) -> [Node] {
         )]
     }
     return []
+}
+
+func parenthesisRule(lnode: Node, cnode: Node, rnode: Node) -> [Node] {
+    guard lnode.cat == .LPAREN, rnode.cat == .RPAREN else {
+        return []
+    }
+    return [
+        Node(
+            rs: .PAREN,
+            pf: lnode.pf + cnode.pf + rnode.pf,
+            cat: cnode.cat,
+            daughters: [lnode, cnode, rnode],
+            logScore: cnode.logScore,
+            source: ""
+        )
+    ]
 }
 
 func maximumIndexC(_ cat: Cat) -> Int {
