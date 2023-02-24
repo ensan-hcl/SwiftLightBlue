@@ -48,16 +48,38 @@ extension Node: CustomDebugStringConvertible {
 }
 
 indirect enum Cat {
+    /// `[Feature]`は常に7つの値を取り、以下のようになる。
+    /// - `[0]`: 用言の品詞
+    /// - `[1]`: 活用の種類
+    /// - `[2]`: 非過去形(`[.M]`) / 過去形(`[.P]`)
+    /// - `[3]`: 非丁寧形(`[.M]`) / 丁寧形(`[.P]`)
+    /// - `[4]`: 肯定形(`[.M]`) / 否定形(`[.P]`)
+    /// - `[5]`: 非鼻音化形(`[.M]`) / 鼻音化形(`[.P]`)
+    /// - `[6]`: 非取り立て形(`[.M]`) / 取り立て形(`[.P]`)
+    ///
+    /// このうち、原著では`[2]`の位置に以下があるが、これはこの実装では除かれている。このことは、例えば(353)の「ん」が`MyLexicon.hs`の記述において`+l`の素性が記述されていないことからわかる。
+    /// - `[2]`: 口語形(`[.M]`) / 文語残存形(`[.P]`)
     case S([Feature])
+    /// `[Feature]`は常に1つの値(格)を取る。
     case NP([Feature])
     case N
+    /// `[Feature]`は常に1つの値を取る。
     case Sbar([Feature])
     case CONJ
     case LPAREN
     case RPAREN
+    /// X / Y
     case SL(Cat, Cat)
+    /// X \ Y
     case BS(Cat, Cat)
-    // TODO: 検証: 第1引数の意味がよくわからない
+
+    /// Category variables, where Int is an index, Cat is a restriction for its head
+    ///
+    /// (要検証)`Bool`の値の意味は、`T`が`Cat`をHeadとするComplex Typeを許すか否かである。例えば`Cat`に`modifiableS`が指定されているとき、`true`であれば`modifiableS/N`や`modifiableS\NP`のような型と`T`を同一化できるが、`false`の場合は`modifiableS`に同一化可能な範疇のみが許される。
+    ///
+    /// `Int`の値はインデックスである。
+    ///
+    /// `Cat`は常にほとんどの場合`S`であり、唯一`MyLexicon.hs`においてsourceを(531)?として定義される格助詞の「の」のみ`N`が指定されている。ただし、これは原著の範疇指定と一致しない。、範疇変数のHeadとはそれが置き換えられる対象のことを指すようである。このことと、`unifyCategory`および`unifyWithHead`の実装から、`Cat`の値はHeadとなる範疇への制約であり、`Cat`の下位範疇のみが許されていると解釈できる。
     case T(Bool, Int, Cat)
 }
 
@@ -231,7 +253,9 @@ extension Cat {
 }
 
 enum Feature: Equatable, CustomStringConvertible {
+    /// 素性の集合。順序は考慮しない。
     case F([FeatureValue])
+    /// 原著で`S_1️⃣`のように表記されていたもの。`Int`はインデックス、`[FeatureValue]`が取りうる値を示す。
     case SF(Int, [FeatureValue])
 
     var description: String {
@@ -245,36 +269,149 @@ enum Feature: Equatable, CustomStringConvertible {
 }
 
 enum FeatureValue: String, Equatable, CustomStringConvertible {
-    case V5k, V5s, V5t, V5n, V5m, V5r, V5w, V5g, V5z, V5b,
-         V5IKU, V5YUK, V5ARU, V5NAS, V5TOW,
-         V1, VK, VS, VSN, VZ, VURU,
-         Aauo, Ai, ANAS, ATII, ABES,
-         Nda, Nna, Nno, Ntar, Nni, Nemp, Nto,
-         Exp,
-         Stem, UStem, NStem,
-         Neg, Cont, Term, Attr, Hyp, Imper, Pre, NTerm,
-         NegL, TeForm, NiForm,
-         EuphT, EuphD,
-         ModU, ModD, ModS, ModM,
-         VoR, VoS, VoE,
-         P, M,
-         Nc, Ga, O, Ni, To, Niyotte, No,
-         ToCL, YooniCL,
-         Decl
+    /// 動詞:五段:カ行
+    case V5k
+    /// 動詞:五段:サ行
+    case V5s
+    /// 動詞:五段:タ行
+    case V5t
+    /// 動詞:五段:ナ行
+    case V5n
+    /// 動詞:五段:マ行
+    case V5m
+    /// 動詞:五段:ラ行
+    case V5r
+    /// 動詞:五段:ワ行
+    case V5w
+    /// 動詞:五段:ガ行
+    case V5g
+    /// 動詞:五段:ザ行
+    case V5z
+    /// 動詞:五段:バ行
+    case V5b
+    /// 動詞:五段:カ行:促音便型 (行く→行った)
+    case V5IKU
+    /// 動詞:五段:カ行:特殊ユク
+    case V5YUK
+    /// 動詞:五段:ラ行:特殊:アル (\*あらない)
+    case V5ARU
+    /// 動詞:五段:バ行
+    case V5NAS
+    /// 動詞:五段:ワ行:ウ音便型 (問う→問うた)
+    case V5TOW
+    /// 動詞:一段
+    case V1
+    /// 動詞:カ変
+    case VK
+    /// 動詞:サ変
+    case VS
+    /// 動詞:サ変名詞
+    case VSN
+    /// 動詞:ザ変
+    case VZ
+    /// 動詞:特殊:得る
+    case VURU
+    /// 形容詞:アウオ段
+    case Aauo
+    /// 形容詞:イ段
+    case Ai
+    /// 形容詞:ナシ型
+    case ANAS
+    /// 形容詞:チイ型 (ちゃちい)
+    case ATII
+    /// 形容詞:ベシ型
+    case ABES
+    /// 状詞: ダ接続可能
+    case Nda
+    /// 状詞: ナ接続可能
+    case Nna
+    /// 状詞: ノ接続可能
+    case Nno
+    /// 状詞: タリ接続可能
+    case Ntar
+    /// 状詞: ニ接続可能
+    case Nni
+    /// 状詞: 単独で副詞可能
+    case Nemp
+    /// 状詞: ト接続可能
+    case Nto
+    /// 感動詞 (Lexicon.swiftを参照)
+    case Exp
+    /// 活用種: 語幹形
+    case Stem
+    /// 活用種: 文語連用接続形
+    case UStem
+    /// (推測) 状詞語幹
+    case NStem
+    /// 活用種: 打消形
+    case Neg
+    /// 活用種: 連用形
+    case Cont
+    /// 活用種: 終止形
+    case Term
+    /// 活用種: 連体形
+    case Attr
+    /// 活用種: 条件形
+    case Hyp
+    /// 活用種: 命令形
+    case Imper
+    /// 活用種: 推量形
+    case Pre
+    /// (推測) 状詞終止形
+    case NTerm
+    /// 活用種: 文語打消形
+    case NegL
+    /// 活用種: テ形
+    case TeForm
+    /// 活用種: ニ形
+    case NiForm
+    /// 活用種:過去接続形:タ接続形
+    case EuphT
+    /// 活用種:過去接続形:ダ接続形
+    case EuphD
+    /// 活用種:様相接続形:ウ接続形
+    case ModU
+    /// 活用種:様相接続形:ダロウ接続形
+    case ModD
+    /// 活用種:様相接続形:ソウダ接続形
+    case ModS
+    /// (推測) 活用種:様相接続形:マス接続形 (MyLexicon.hsに基づく)
+    case ModM
+    /// 活用種:態接続形:受身接続形
+    case VoR
+    /// 活用種:態接続形:使役接続形
+    case VoS
+    /// 活用種:態接続形:可能接続形
+    case VoE
+    /// 素性値: Plus
+    case P
+    /// 素性値: Minus
+    case M
+    /// 格無し
+    case Nc
+    /// ガ格
+    case Ga
+    /// ヲ格
+    case O
+    /// ニ格
+    case Ni
+    /// ト格
+    case To
+    /// ニヨッテ格
+    case Niyotte
+    /// ノ格
+    case No
+    /// 引用形式:ト (走ったと言う)
+    case ToCL
+    /// (推測) 引用形式:ヨウニ (走ったように見える)
+    case YooniCL
+    /// 発話形式:平叙文
+    case Decl
 
     var description: String {
         return self.rawValue
     }
 }
-
-/*
-
- -- | checks if two lists of features are unifiable.
- unifiable :: [Feature] -> [Feature] -> Bool
- unifiable f1 f2 = case unifyFeatures [] f1 f2 of
- Just _ -> True
- Nothing -> False
- */
 
 func unifiable(f1: [Feature], f2: [Feature]) -> Bool {
     return unifyFeatures([], f1, f2) != nil
@@ -747,6 +884,8 @@ func simulSubstituteCV(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue
     }
 }
 
+/// unifies two syntactic categories (`Cat`) and returns a unified syntactic category, under a given category assignment and a given feature assignment.
+/// - note: `c1`と`c2`の順序は無関係である。
 func unifyCategory(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>, _ banned: [Int], _ c1: Cat, _ c2: Cat) -> (Cat, Assignment<Cat>, Assignment<[FeatureValue]>)? {
     let c3: Cat
     switch c1 {
@@ -765,6 +904,7 @@ func unifyCategory(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>, 
     return unifyCategory2(csub, fsub, banned, c3, c4)
 }
 
+/// - note: `c1`と`c2`の順序は無関係である。
 func unifyCategory2(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>, _ banned: [Int], _ c1: Cat, _ c2: Cat) -> (Cat, Assignment<Cat>, Assignment<[FeatureValue]>)? {
     switch (c1, c2) {
     case let (.T(f1, i, u1), .T(f2, j, u2)):
@@ -794,6 +934,9 @@ func unifyCategory2(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>,
         if banned.contains(i) {
             return nil
         }
+        // fがtrueの場合: uにc2でunifyWithHeadできれば
+        // fがfalseの場合: uにc2でunifyCategoryできれば
+        // その結果を返す。
         guard let (c3, csub2, fsub2) = {
             f ? unifyWithHead(csub, fsub, [i] + banned, u, c2)
             : unifyCategory(csub, fsub, [i] + banned, u, c2)
@@ -805,6 +948,9 @@ func unifyCategory2(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>,
         if banned.contains(i) {
             return nil
         }
+        // fがtrueの場合: uにc2でunifyWithHeadできれば
+        // fがfalseの場合: uにc2でunifyCategoryできれば
+        // その結果を返す。
         guard let (c3, csub2, fsub2) = {
             f ? unifyWithHead(csub, fsub, [i] + banned, u, c1)
             : unifyCategory(csub, fsub, [i] + banned, u, c1)
@@ -813,16 +959,19 @@ func unifyCategory2(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>,
         }
         return (c3, alter(i, .substVal(c3), csub2), fsub2)
     case let (.NP(f1), .NP(f2)):
+        // 素性が同一化可能であれば
         guard let (f3, fsub2) = unifyFeatures(fsub, f1, f2) else {
             return nil
         }
         return (.NP(f3), csub, fsub2)
     case let (.S(f1), .S(f2)):
+        // 素性が同一化可能であれば
         guard let (f3, fsub2) = unifyFeatures(fsub, f1, f2) else {
             return nil
         }
         return (.S(f3), csub, fsub2)
     case let (.Sbar(f1), .Sbar(f2)):
+        // 素性が同一化可能であれば
         guard let (f3, fsub2) = unifyFeatures(fsub, f1, f2) else {
             return nil
         }
@@ -848,14 +997,23 @@ func unifyCategory2(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>,
     }
 }
 
+/// unifies a cyntactic category `c1` (in `T(true, i, c1)`) with the head of `c2`, under a given feature assignment.
+///
+/// 「Head」とはComplex Typeにおける「一番左側の範疇」である。`unifyWithHead`により、このHeadと`T`の同一化を行う。
+///
+/// 例えば`c1`が`S(f1)`、`c2`が`S(f2)\NP\NP`のとき、`T`と`S(f2)`でunifyすることは通常できない。
+/// `unifyCategory`の実装では、`c1`と`c2`を渡した場合、単純に失敗する。
+/// このようなケースで、`unifyWithHead`は、`f1`と`f2`が`unify`可能であれば、`T==c2`となるように`unify`を実施する。
 func unifyWithHead(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>, _ banned: [Int], _ c1: Cat, _ c2: Cat) -> (Cat, Assignment<Cat>, Assignment<[FeatureValue]>)? {
     switch c2 {
     case let .SL(x, y):
+        // SLの場合、Resultの側が制約c1を満たせば十分であると判断する
         guard let (z, csub2, fsub2) = unifyWithHead(csub, fsub, banned, c1, x) else {
             return nil
         }
         return (.SL(z, y), csub2, fsub2)
     case let .BS(x, y):
+        // BSの場合、Resultの側が制約c1を満たせば十分であると判断する
         guard let (z, csub2, fsub2) = unifyWithHead(csub, fsub, banned, c1, x) else {
             return nil
         }
@@ -864,11 +1022,13 @@ func unifyWithHead(_ csub: Assignment<Cat>, _ fsub: Assignment<[FeatureValue]>, 
         if banned.contains(i) {
             return nil
         }
+        // c2が`T`の場合、c2の持つ制約と同一化を試み、成功すればそれに基づいて同一化を行う
         guard let (z, csub2, fsub2) = unifyCategory(csub, fsub, [i] + banned, c1, u) else {
             return nil
         }
         return (.T(f, i, z), alter(i, .substVal(.T(f, i, z)), csub2), fsub2)
     default:
+        // c2がc1と同一化可能であれば、それを返す
         return unifyCategory(csub, fsub, banned, c1, c2)
     }
 }
@@ -889,6 +1049,7 @@ func simulSubstituteFV(_ fsub: Assignment<[FeatureValue]>, _ f: [Feature]) -> [F
     }
 }
 
+/// - note: `f1`と`f2`の順序は無関係である。
 func unifyFeature(_ fsub: Assignment<[FeatureValue]>, f1: Feature, f2: Feature) -> (Feature, Assignment<[FeatureValue]>)? {
     switch (f1, f2) {
     case let (.SF(i, v1), .SF(j, v2)):
@@ -940,6 +1101,7 @@ func unifyFeature(_ fsub: Assignment<[FeatureValue]>, f1: Feature, f2: Feature) 
 }
 
 // 再帰を使わずに書き直した
+/// - note: `f1`と`f2`の順序は無関係である。
 func unifyFeatures(_ fsub: Assignment<[FeatureValue]>, _ f1: some Collection<Feature>, _ f2: some Collection<Feature>) -> ([Feature], Assignment<[FeatureValue]>)? {
     guard f1.count == f2.count else {
         return nil

@@ -280,11 +280,42 @@ final class SwiftLightBlueTests: XCTestCase {
             XCTAssertFalse(result.isEmpty)
             XCTAssertTrue(result.first?.rs == .WRAP)
         }
+        do {
+            let sentence = "選手が怪盗を捕まえた"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertFalse(result.isEmpty)
+            XCTAssertTrue(result.first?.rs == .WRAP)
+        }
+        do {
+            // 二重ガ格
+            let sentence = "選手が怪盗が捕まえた"
+            let result = parser.simpleParse(10, sentence: sentence)
+            XCTAssertTrue(result.isEmpty)
+        }
     }
 
     func testGetBundle() throws {
         let b = getBundle()
         print(b.bundleURL)
         print(b.url(forResource: "Juman.dic", withExtension: "tsv"))
+    }
+
+    func testUnifyWithCategory() throws {
+        do {
+            let c1 = defS(verb, [.Stem, .Attr])
+            // c2のヘッド
+            let c2Head = defS([.V1], [.Stem]) // v1 \in verb
+            let c2 = Cat.BS(.BS(c2Head, .NP([.F([.Ga])])), Cat.SL(c2Head, .NP([.F([.O])])))
+            let tForHead = Cat.T(true, 1, c1)
+            let tNotForHead = Cat.T(false, 1, c1)
+            // unifyWithHeadは成功する
+            let uwh = unifyWithHead([], [], [], c1, c2)
+            XCTAssertNotNil(uwh)
+            // unifyCategoryはtForHeadに対してのみ成功する
+            let uct = unifyCategory([], [], [], tForHead, c2)
+            XCTAssertNotNil(uct)
+            let ucf = unifyCategory([], [], [], tNotForHead, c2)
+            XCTAssertNil(ucf)
+        }
     }
 }
