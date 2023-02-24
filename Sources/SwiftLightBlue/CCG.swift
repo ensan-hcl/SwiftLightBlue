@@ -315,7 +315,7 @@ func binaryRules(lnode: Node, rnode: Node) -> [Node] {
         // forwardFunctionCrossedComposition2Rule(lnode: lnode, rnode: rnode),
         // forwardFunctionCrossedComposition1Rule(lnode: lnode, rnode: rnode),
         // backwardFunctionComposition3Rule(lnode: lnode, rnode: rnode),
-//        backwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
+        backwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
 //        forwardFunctionComposition2Rule(lnode: lnode, rnode: rnode),
         backwardFunctionComposition1Rule(lnode: lnode, rnode: rnode),
         forwardFunctionComposition1Rule(lnode: lnode, rnode: rnode),
@@ -389,9 +389,6 @@ func forwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
     if lnode.rs == .FFC1 || lnode.rs == .FFC2 || lnode.rs == .FFC3 || y1.isTNoncaseNP {
         return []
     }
-    if case .T(true, _, _) = y1 {
-        return []
-    }
     let inc = maximumIndexC(rnode.cat)
     if let (_, csub, fsub) = unifyCategory([], [], [], y2, incrementIndexC(y1, inc)) {
         let _z = simulSubstituteCV(csub, fsub, z)
@@ -424,15 +421,40 @@ func backwardFunctionComposition1Rule(lnode: Node, rnode: Node) -> [Node] {
     if rnode.rs == .BFC1 || rnode.rs == .BFC2 || rnode.rs == .BFC3 {
         return []
     }
-    if case .T(true, _, _) = y1 {
-        return []
-    }
     let inc = maximumIndexC(lnode.cat)
     if let (_, csub, fsub) = unifyCategory([], [], [], y1, incrementIndexC(y2, inc)) {
         let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(incrementIndexC(x, inc), z))
         return [
             Node(
                 rs: .BFC1,
+                pf: lnode.pf + rnode.pf,
+                cat: newcat,
+                // sem: ,
+                // sig: ,
+                daughters: [lnode, rnode],
+                logScore: lnode.logScore + rnode.logScore,
+                source: ""
+            )
+        ]
+    }
+    return []
+}
+
+func backwardFunctionComposition2Rule(lnode: Node, rnode: Node) -> [Node] {
+    guard case let .BS(y, z2) = lnode.cat,
+          case let .BS(y1, z1) = y,
+          case let .BS(x, y2) = rnode.cat else {
+        return []
+    }
+    if rnode.rs == .BFC1 || rnode.rs == .BFC2 || rnode.rs == .BFC3 {
+        return []
+    }
+    let inc = maximumIndexC(lnode.cat)
+    if let (_, csub, fsub) = unifyCategory([], [], [], incrementIndexC(y2, inc), y1) {
+        let newcat: Cat = simulSubstituteCV(csub, fsub, .BS(.BS(incrementIndexC(x, inc), z1), z2))
+        return [
+            Node(
+                rs: .BFC2,
                 pf: lnode.pf + rnode.pf,
                 cat: newcat,
                 // sem: ,

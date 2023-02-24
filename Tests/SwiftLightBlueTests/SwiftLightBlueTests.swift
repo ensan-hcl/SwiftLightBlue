@@ -143,6 +143,15 @@ final class SwiftLightBlueTests: XCTestCase {
             let result = binaryRules(lnode: 小さ, rnode: な)
             XCTAssertFalse(result.isEmpty)
         }
+
+        let 食べ = constructVerb("食べる", "ヲガ", [.V1], [.Stem, .Neg, .Cont, .NegL, .EuphT]).map {
+            lexicalitem("食べ", "", 100, $0)
+        }.first!
+        let る = conjSuffix("る", "", [.V5r, .V1, .V5ARU, .V5NAS], [.Term, .Attr])
+        do {
+            let result = binaryRules(lnode: 食べ, rnode: る)
+            XCTAssertFalse(result.isEmpty)
+        }
     }
 
     func testUnifyCategory() throws {
@@ -175,6 +184,7 @@ final class SwiftLightBlueTests: XCTestCase {
         XCTAssertEqual(dict["の"]?.count, 8)
         XCTAssertEqual(dict["な"]?.count, 12)
         XCTAssertEqual(dict["い"]?.count, 9)
+        XCTAssertEqual(dict["る"]?.count, 1)
     }
 
 
